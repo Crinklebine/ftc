@@ -1,0 +1,58 @@
+//@version=3
+// FTC (Full Timeframe Continuity) Pine Script
+// (c)2018 Crinklebine Crinklebine.com
+study("FTC (The Strat)", overlay=true, precision=0)
+//study("FTC (The Strat)" )
+
+// write text credit
+plotshape(true, title="Crinklebine Version 2", style=shape.cross, color=#0080FF,  transp=0, location=location.bottom, text="Crinklebine.com", textcolor=#0080FF, show_last=1)
+
+// grab the 60m source and get flags for a green or red candle
+sixtyClose = security(tickerid, "60", close)
+sixtyOpen = security(tickerid, "60", open)
+//isSixtyRed = sixtyClose < sixtyOpen ? 1 : 0
+//isSixtyGreen = sixtyClose > sixtyOpen ? 1 : 0
+isSixtyRedFlag = sixtyClose < sixtyOpen
+isSixtyGreenFlag = sixtyClose > sixtyOpen
+// get the bar history status
+bar60IsHistoryFlag = barstate.ishistory
+
+// grab the daily source and get flags for a green or red candle
+daily(source) => security(tickerid, "1D", source)
+//isDailyRed = daily(close) < daily(open) ? 1 : 0
+//isDailyGreen = daily(close) > daily(open) ? 1 : 0
+isDailyRedFlag = daily(close) < daily(open)
+isDailyGreenFlag = daily(close) > daily(open)
+// get the bar history status
+barDailyIsHistoryFlag = daily(barstate.ishistory)
+
+// grab the weekly source and get flags for a green or red candle
+weekly(source) => security(tickerid, "1W", source)
+//isWeeklyRed = weekly(close) < weekly(open) ? 1 : 0
+//isWeeklyGreen = weekly(close) >  weekly(open) ? 1 : 0
+isWeeklyRedFlag = weekly(close) <  weekly(open)
+isWeeklyGreenFlag = weekly(close) >  weekly(open)
+// get the bar history status
+barWeeklyIsHistoryFlag = weekly(barstate.ishistory)
+
+// grab the monthly source and get flags for a green or red candle
+monthly(source) => security(tickerid, "1M", source)
+//isMonthlyRed = monthly(close) < monthly(open) ? 1 : 0
+//isMonthlyGreen = monthly(close) > monthly(open) ? 1 : 0
+isMonthlyRedFlag = monthly(close) < monthly(open)
+isMonthlyGreenFlag = monthly(close) > monthly(open)
+// get the bar history status
+barMonthlyIsHistoryFlag = monthly(barstate.ishistory)
+
+// debug plot
+//plot (interval==60 ? isMonthlyRed : 0 , color=red)
+//plot (interval==60 ? isMonthlyGreen : 0, color=green)
+
+// set an overall history flag of any bar is in a history barstate
+overallBarHistoryFlag = bar60IsHistoryFlag or barDailyIsHistoryFlag or barWeeklyIsHistoryFlag or barMonthlyIsHistoryFlag
+
+// perform logic to determine if FTC green, red or neutral and plotshape
+plotshape(interval==60 ? (isMonthlyGreenFlag and isWeeklyGreenFlag and isDailyGreenFlag and isSixtyGreenFlag) : false, title="FTC Green", style=shape.triangleup, location=location.top, color=#00ff00,  transp=0, text="FTC", textcolor=#00ff00, show_last=1)
+plotshape(interval==60 ? (isMonthlyRedFlag and isWeeklyRedFlag and isDailyRedFlag and isSixtyRedFlag) : false, title="FTC Red", style=shape.triangledown, location=location.top, color=#ff0000,  transp=0, text="FTC", textcolor=#ff0000, show_last=1)
+plotshape(interval==60 ? ((not overallBarHistoryFlag) and not(isMonthlyRedFlag and isWeeklyRedFlag and isDailyRedFlag and isSixtyRedFlag) and not(isMonthlyGreenFlag and isWeeklyGreenFlag and isDailyGreenFlag and isSixtyGreenFlag)) : false, title="FTC Neutral", style=shape.square, location=location.top, color=#ffff00,  transp=0, text="FTC", textcolor=yellow, show_last=1)
+plotshape(interval==60 ? (overallBarHistoryFlag and not(isMonthlyRedFlag and isWeeklyRedFlag and isDailyRedFlag and isSixtyRedFlag) and not(isMonthlyGreenFlag and isWeeklyGreenFlag and isDailyGreenFlag and isSixtyGreenFlag)) : false, title="FTC Wait", style=shape.square, location=location.top, color=#ffff00, transp=0, text="wait", textcolor=yellow, show_last=1)
